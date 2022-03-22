@@ -15,15 +15,19 @@ public class BookService {
 	@Autowired
 	private BookRepository bookRepository;
 
-	public List<Book> getAllBooks(){
+	public List<Book> getAllBooks() {
 		return bookRepository.findAll();
 	}
-	
-	public Book findById(Long id){
-		Optional<Book> book = bookRepository.findById(id);
-		if(book.isPresent())
-			return book.get();
-		else
-			return null;
+
+	public Book findById(Long id) {
+
+		if (id > 0L && id <= 4L) {
+			Optional<Book> book = bookRepository.findById(id);
+			if (book.isPresent())
+				return book.get();
+			else
+				return null;
+		}
+		return null;
 	}
 }

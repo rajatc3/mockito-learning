@@ -1,25 +1,30 @@
 package com.rajat.mockitolearning;
 
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.junit.jupiter.api.Assertions.*;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -70,7 +75,7 @@ class MockitoLearningApplicationTests {
 		@DisplayName("Find all books: Success")
 		public void findAllBooks_success() throws Exception {
 
-			Mockito.when(bookService.getAllBooks()).thenReturn(books);
+			when(bookService.getAllBooks()).thenReturn(books);
 
 			mockMvc.perform(MockMvcRequestBuilders.get("/book").accept(MediaType.APPLICATION_JSON))
 					.andExpect(status().isOk()).andExpect(MockMvcResultMatchers.jsonPath("$.data", hasSize(4)))
@@ -82,7 +87,7 @@ class MockitoLearningApplicationTests {
 		@DisplayName("Find all books : No book present")
 		public void findAllBooks_noBooksFound() throws Exception {
 
-			Mockito.when(bookService.getAllBooks()).thenReturn(new ArrayList<Book>());
+			when(bookService.getAllBooks()).thenReturn(new ArrayList<Book>());
 
 			mockMvc.perform(MockMvcRequestBuilders.get("/book").accept(MediaType.APPLICATION_JSON))
 					.andExpect(status().isOk()).andExpect(MockMvcResultMatchers.jsonPath("$.data", hasSize(0)));
@@ -91,8 +96,8 @@ class MockitoLearningApplicationTests {
 		@Test
 		@DisplayName("Find one book: Success")
 		public void findOneBook_success() throws Exception {
-			Mockito.when(bookService.findById(1L)).thenReturn(RECORD1);
-			Mockito.when(bookService.findById(2L)).thenReturn(RECORD2);
+			when(bookService.findById(1L)).thenReturn(RECORD1);
+			when(bookService.findById(2L)).thenReturn(RECORD2);
 
 			mockMvc.perform(MockMvcRequestBuilders.get("/book/{bookId}", 1L).accept(MediaType.APPLICATION_JSON))
 					.andExpect(status().isOk()).andExpect(jsonPath("$", notNullValue()))
@@ -106,7 +111,7 @@ class MockitoLearningApplicationTests {
 		@Test
 		@DisplayName("Find one book: Not present in database")
 		public void findOneBook_bookNotPresent() throws Exception {
-			Mockito.when(bookService.findById(1L)).thenReturn(null);
+			when(bookService.findById(anyLong())).thenReturn(null);
 
 			mockMvc.perform(MockMvcRequestBuilders.get("/book/{bookId}", 1L).accept(MediaType.APPLICATION_JSON))
 					.andExpect(status().isBadRequest())
@@ -138,7 +143,7 @@ class MockitoLearningApplicationTests {
 		@Test
 		@DisplayName("Get All Books: When books are present in database")
 		public void getAllBooks_Success() {
-			Mockito.when(bookRepo.findAll()).thenReturn(books);
+			when(bookRepo.findAll()).thenReturn(books);
 			List<Book> bookList = bookService.getAllBooks();
 			assertEquals(books, bookList);
 
@@ -147,7 +152,7 @@ class MockitoLearningApplicationTests {
 		@Test
 		@DisplayName("Get All Books: When no books are present in database")
 		public void getAllBooks_NoBooks() {
-			Mockito.when(bookRepo.findAll()).thenReturn(null);
+			when(bookRepo.findAll()).thenReturn(null);
 
 			List<Book> bookList = bookService.getAllBooks();
 			assertEquals(null, bookList);
@@ -156,11 +161,41 @@ class MockitoLearningApplicationTests {
 
 		@Test
 		@DisplayName("Get All Books: When database throws Exception")
-		public void giot() {
-			Mockito.when(bookRepo.findAll()).thenThrow(RuntimeException.class);
+		public void getAllBooks_DBException() {
+			when(bookRepo.findAll()).thenThrow(RuntimeException.class);
 
 			assertThrows(RuntimeException.class, () -> bookService.getAllBooks());
 
+		}
+		
+		@ParameterizedTest
+		@DisplayName("Find by ID: ID is valid and Record is Available")
+		@ValueSource(longs = {1L, 2L, 3L, 4L})
+		public void findById_RecordAvailable(Long Id) {
+			when(bookRepo.findById(Id)).thenReturn(Optional.of(RECORD1));
+			assertEquals(RECORD1, bookService.findById(Id));
+		}
+		
+		@ParameterizedTest
+		@DisplayName("Find by ID: ID is not valid")
+		@ValueSource(longs = {0L, 5L, 6L, Long.MAX_VALUE})
+		public void findById_IdNotValid(Long Id) {			
+			assertEquals(null, bookService.findById(Id));
+			assertThatNoException();
+		}
+		
+		@Test
+		@DisplayName("Find by ID: ID valid but Record is not Available")
+		public void findById_RecordNotAvailabe() {
+			assertEquals(null, bookService.findById(1L));
+		}
+		
+		@Test
+		@DisplayName("Find by ID: When database throws Exception")
+		public void findById_Exception() {
+			Long Id = 3L;
+			when(bookRepo.findById(Id)).thenThrow(RuntimeException.class);
+			assertThrows(RuntimeException.class, () -> bookService.findById(Id));
 		}
 	}
 }
