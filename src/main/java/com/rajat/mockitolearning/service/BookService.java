@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.rajat.mockitolearning.entity.Book;
+import com.rajat.mockitolearning.exceptions.InvalidDataInRequestException;
 import com.rajat.mockitolearning.repos.BookRepository;
 
 @Service
@@ -29,5 +30,12 @@ public class BookService {
 				return null;
 		}
 		return null;
+	}
+
+	public Book updateBook(Book data) {
+		if (findById(data.getId()) == null)
+			throw new InvalidDataInRequestException("Data not found.");
+
+		return bookRepository.save(data);
 	}
 }
