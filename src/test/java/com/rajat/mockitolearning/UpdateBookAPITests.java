@@ -81,10 +81,9 @@ class UpdateBookAPITests {
 
 		@Test
 		public void validRequestWithDataInDatabase() {
-
 		}
 
-		@ParameterizedTest
+		//@ParameterizedTest
 		@ValueSource(longs = { 1L })
 		public void validRequestWithoutDataInDatabase(Long id) throws Exception {
 
@@ -100,7 +99,7 @@ class UpdateBookAPITests {
 					.andExpect(jsonPath("$.data", is(RECORD1)));
 		}
 
-		@Test
+		//@Test
 		public void invalidRequest() throws Exception {
 
 			when(authenticationService.authenticateRequest(requestObject.getUserIdentifier(),
