@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.rajat.mockitolearning.entity.AuthenticationEntity;
 import com.rajat.mockitolearning.repos.AuthenticationRepository;
-import com.rajat.mockitolearning.utility.RequestObject;
 
 @Service
 public class AuthenticationService {
@@ -15,12 +14,12 @@ public class AuthenticationService {
 	@Autowired
 	AuthenticationRepository authRepo;
 
-	public boolean authenticateRequest(RequestObject request) {
+	public boolean authenticateRequest(String userIdentifier, String tokenId) {
 		Optional<AuthenticationEntity> authDetails = authRepo
-				.findByUserIdentifierEqualsAndIsExpiredFalse(request.getUserIdentifier());
+				.findByUserIdentifierEqualsAndIsExpiredFalse(userIdentifier);
 
 		if (authDetails.isPresent()) {
-			if (authDetails.get().getTokenId().equals(request.getTokenId())) {
+			if (authDetails.get().getTokenId().equals(tokenId)) {
 				return true;
 			}
 		}

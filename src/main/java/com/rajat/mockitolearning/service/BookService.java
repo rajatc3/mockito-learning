@@ -32,8 +32,11 @@ public class BookService {
 		return null;
 	}
 
-	public Book updateBook(Book data) {
-		if (findById(data.getId()) == null)
+	public Book updateBook(Long id, Book data) {
+		System.out.println(id);
+		if (id != data.getId())
+			throw new InvalidDataInRequestException("Id do not match");
+		if (findById(id) == null)
 			throw new InvalidDataInRequestException("Data not found.");
 
 		return bookRepository.save(data);

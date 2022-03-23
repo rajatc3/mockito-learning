@@ -37,17 +37,21 @@ public class BookController {
 			return Utility.badRequest(Utility.createBadRequestResponseObject());
 	}
 
-	@PostMapping("/book")
-	public ResponseEntity<ResponseObject> updateBookDetails(@RequestBody RequestObject request) {
-		boolean validRequest = authenticationService.authenticateRequest(request);
+	@PostMapping("/book/{bookId}")
+	public ResponseEntity<ResponseObject> updateBookDetails(@RequestBody RequestObject request, @PathVariable(value = "bookId") Long id) {
+		boolean validRequest = authenticationService.authenticateRequest(request.getUserIdentifier(), request.getTokenId());
 		if (!validRequest) {
 			return Utility.badRequest(Utility.createBadRequestResponseObject());
 		}
 		try {
-			Book book = bookService.updateBook((Book) request.getData());
+			System.out.println(request.toString());
+			Book book = bookService.updateBook(id, (Book) request.getData());
+			System.out.println(book);
 			return Utility.success(Utility.createSuccessResponseObject(book));
 		} catch (ClassCastException e) {
+			e.printStackTrace();
 			throw new InvalidDataInRequestException("Invalid data passed in request.");
 		}
 	}
+		
 }
